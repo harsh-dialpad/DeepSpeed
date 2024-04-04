@@ -44,7 +44,7 @@ class LinearFunctionForZeroStage3(torch.autograd.Function):
 
     # Note that both forward and backward are @staticmethods
     @staticmethod
-    @autocast_custom_fwd(cast_inputs=torch.float16)
+    @autocast_custom_fwd
     # bias is an optional argument
     def forward(ctx, input, weight, bias=None):
 
@@ -54,18 +54,9 @@ class LinearFunctionForZeroStage3(torch.autograd.Function):
             # fused op is marginally faster
             ret = torch.addmm(bias, input, weight.t())
         else:
-            # print('input', input.dtype)
-            # print('weight', weight.dtype)
             if not input.dtype == weight.dtype:
-                if input.dtype == torch.bfloat16:
-                    weight = weight.to(torch.bfloat16)
-                    print('casted weight to bf16')
-                elif weight.dtype == torch.bfloat16:
-                    input = input.to(torch.bfloat16)
-                    print('casted input to bf16')
-                else:
-                    input = input.to(weight.dtype)
-                    print(f'casted input to {weight.dtype}')
+                input = input.to(weight.dtype)
+                print(f'casted input to {weight.dtype}')
             output = input.matmul(weight.t())
             if bias is not None:
                 output += bias
@@ -92,10 +83,17 @@ class LinearFunctionForZeroStage3(torch.autograd.Function):
         # skip them. Returning gradients for inputs that don't require it is
         # not an error.
         if ctx.needs_input_grad[0]:
+            if not grad_output.dtype == weight.dtype:
+                grad_output = grad_output.to(weight.dtype)
+                print(f'casted grad_output to {weight.dtype}')
+
             #print(f"Computing grad input weight {weight.shape} grad_output {grad_output.shape}")
             grad_input = grad_output.matmul(weight)
             #print(f"Computed grad input {grad_input.shape}")
         if ctx.needs_input_grad[1]:
+            if not input.dtype == grad_output.dtype:
+                input = input.to(grad_output.dtype)
+                print(f'casted input to {grad_output.dtype}')
             #print("Computing grad weight")
             dim = grad_output.dim()
             if dim > 2:
