@@ -44,7 +44,7 @@ class LinearFunctionForZeroStage3(torch.autograd.Function):
 
     # Note that both forward and backward are @staticmethods
     @staticmethod
-    @autocast_custom_fwd(cast_inputs=torch.bfloat16)
+    @autocast_custom_fwd(cast_inputs=torch.float16)
     # bias is an optional argument
     def forward(ctx, input, weight, bias=None):
 
@@ -54,8 +54,8 @@ class LinearFunctionForZeroStage3(torch.autograd.Function):
             # fused op is marginally faster
             ret = torch.addmm(bias, input, weight.t())
         else:
-            print('input', input.dtype)
-            print('weight', weight.dtype)
+            # print('input', input.dtype)
+            # print('weight', weight.dtype)
             if not input.dtype == weight.dtype:
                 if input.dtype == torch.bfloat16:
                     weight = weight.to(torch.bfloat16)
