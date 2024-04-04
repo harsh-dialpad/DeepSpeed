@@ -55,8 +55,8 @@ class LinearFunctionForZeroStage3(torch.autograd.Function):
             ret = torch.addmm(bias, input, weight.t())
         else:
             if not input.dtype == weight.dtype:
-                input = input.to(weight.dtype)
-                print(f'casted input to {weight.dtype}')
+                weight = weight.to(input.dtype)
+                print(f'casted weight from {weight.dtype} to {input.dtype}')
             output = input.matmul(weight.t())
             if bias is not None:
                 output += bias
@@ -83,17 +83,17 @@ class LinearFunctionForZeroStage3(torch.autograd.Function):
         # skip them. Returning gradients for inputs that don't require it is
         # not an error.
         if ctx.needs_input_grad[0]:
-            if not grad_output.dtype == weight.dtype:
-                grad_output = grad_output.to(weight.dtype)
-                print(f'casted grad_output to {weight.dtype}')
+            # if not grad_output.dtype == weight.dtype:
+            #     grad_output = grad_output.to(weight.dtype)
+            #     # print(f'casted grad_output from {grad_output.dtype} to {weight.dtype}')
 
             #print(f"Computing grad input weight {weight.shape} grad_output {grad_output.shape}")
             grad_input = grad_output.matmul(weight)
             #print(f"Computed grad input {grad_input.shape}")
         if ctx.needs_input_grad[1]:
             if not input.dtype == grad_output.dtype:
-                input = input.to(grad_output.dtype)
-                print(f'casted input to {grad_output.dtype}')
+                grad_output = grad_output.to(input.dtype)
+                print(f'casted grad_output from {grad_output.dtype} to {input.dtype}')
             #print("Computing grad weight")
             dim = grad_output.dim()
             if dim > 2:
