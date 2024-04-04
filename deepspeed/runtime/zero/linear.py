@@ -83,9 +83,9 @@ class LinearFunctionForZeroStage3(torch.autograd.Function):
         # skip them. Returning gradients for inputs that don't require it is
         # not an error.
         if ctx.needs_input_grad[0]:
-            # if not grad_output.dtype == weight.dtype:
-            #     grad_output = grad_output.to(weight.dtype)
-            #     # print(f'casted grad_output from {grad_output.dtype} to {weight.dtype}')
+            if not grad_output.dtype == weight.dtype:
+                weight = weight.to(grad_output.dtype)
+                print(f'casted weight from {weight.dtype} to {grad_output.dtype}')
 
             #print(f"Computing grad input weight {weight.shape} grad_output {grad_output.shape}")
             grad_input = grad_output.matmul(weight)
