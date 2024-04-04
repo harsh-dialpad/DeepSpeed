@@ -54,6 +54,9 @@ class LinearFunctionForZeroStage3(torch.autograd.Function):
             # fused op is marginally faster
             ret = torch.addmm(bias, input, weight.t())
         else:
+            print('input', input.dtype)
+            print('weight', weight.dtype)
+            exit(1)
             output = input.matmul(weight.t())
             if bias is not None:
                 output += bias
