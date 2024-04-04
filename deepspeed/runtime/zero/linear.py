@@ -56,7 +56,16 @@ class LinearFunctionForZeroStage3(torch.autograd.Function):
         else:
             print('input', input.dtype)
             print('weight', weight.dtype)
-            exit(1)
+            if not input.dtype == weight.dtype:
+                if input.dtype == torch.bfloat16:
+                    weight = weight.to(torch.bfloat16)
+                    print('casted weight to bf16')
+                elif weight.dtype == torch.bfloat16:
+                    input = input.to(torch.bfloat16)
+                    print('casted input to bf16')
+                else:
+                    input = input.to(weight.dtype)
+                    print(f'casted input to {weight.dtype}')
             output = input.matmul(weight.t())
             if bias is not None:
                 output += bias
